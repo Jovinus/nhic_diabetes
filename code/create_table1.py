@@ -136,17 +136,25 @@ def create_train_test_table(
             'test': 'Validation'
         })
     
-    # TableOne 생성
-    table = TableOne(
-        df_labeled,
+    # TableOne 생성 (하위 버전 호환 - overall 파라미터 유무 확인)
+    import inspect
+    tableone_params = inspect.signature(TableOne.__init__).parameters
+    
+    tableone_kwargs = dict(
+        data=df_labeled,
         columns=all_vars,
         categorical=categorical_vars,
         groupby=split_col,
         pval=True,
-        overall=True,
         rename=VARIABLE_LABELS,
         missing=True,
-        htest_name=True
+    )
+    if 'overall' in tableone_params:
+        tableone_kwargs['overall'] = True
+    if 'htest_name' in tableone_params:
+        tableone_kwargs['htest_name'] = True
+    
+    table = TableOne(**tableone_kwargs
     )
     
     print("\n" + "=" * 70)
@@ -207,18 +215,25 @@ def create_outcome_table(
     # 범주형 레이블 적용
     df_labeled = apply_category_labels(df, categorical_vars + [outcome_col])
     
-    # TableOne 생성
-    table = TableOne(
-        df_labeled,
+    # TableOne 생성 (하위 버전 호환)
+    import inspect
+    tableone_params = inspect.signature(TableOne.__init__).parameters
+    
+    tableone_kwargs = dict(
+        data=df_labeled,
         columns=all_vars,
         categorical=categorical_vars,
         groupby=outcome_col,
         pval=True,
-        overall=True,
         rename=VARIABLE_LABELS,
         missing=True,
-        htest_name=True
     )
+    if 'overall' in tableone_params:
+        tableone_kwargs['overall'] = True
+    if 'htest_name' in tableone_params:
+        tableone_kwargs['htest_name'] = True
+    
+    table = TableOne(**tableone_kwargs)
     
     outcome_name = VARIABLE_LABELS.get(outcome_col, outcome_col)
     print("\n" + "=" * 70)
@@ -306,25 +321,12 @@ def create_all_tables(
         output_path=os.path.join(output_dir, f'table1_by_{target_col}.xlsx')
     )
     
-    # 3. out2 (2형 당뇨병)도 있으면 생성
-    if 'out2' in df.columns and target_col != 'out2':
-        print("\n" + "=" * 70)
-        print("3️⃣ out2 (2형 당뇨병)별 Baseline Characteristics 테이블 생성")
-        print("=" * 70)
-        tables['outcome_out2'] = create_outcome_table(
-            df,
-            outcome_col='out2',
-            output_path=os.path.join(output_dir, 'table1_by_out2.xlsx')
-        )
-    
     print("\n" + "=" * 70)
     print("✅ 모든 테이블 생성 완료!")
     print("=" * 70)
     print(f"\n저장 위치: {output_dir}/")
     print("  - table1_train_test.xlsx: Train vs Test 비교")
     print(f"  - table1_by_{target_col}.xlsx: {target_col}별 비교")
-    if 'out2' in df.columns and target_col != 'out2':
-        print("  - table1_by_out2.xlsx: 2형 당뇨병별 비교")
     
     return tables
 

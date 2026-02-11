@@ -98,6 +98,19 @@ def set_korean_font():
 
 set_korean_font()
 
+# numpy 호환성 패치 (shap 0.32 + numpy>=1.24)
+# shap 0.32가 내부적으로 np.int, np.float, np.bool 사용
+if not hasattr(np, 'int'):
+    np.int = int
+if not hasattr(np, 'float'):
+    np.float = float
+if not hasattr(np, 'bool'):
+    np.bool = bool
+if not hasattr(np, 'str'):
+    np.str = str
+if not hasattr(np, 'object'):
+    np.object = object
+
 # SHAP
 try:
     import shap
@@ -133,6 +146,16 @@ def find_optimal_threshold_youden(y_true: np.ndarray, y_prob: np.ndarray) -> Tup
     return optimal_threshold, optimal_youden
 
 
+def _save_figure(fig, save_path, dpi=500, bbox_inches='tight', pad_inches=0.1):
+    """Figure를 png, tiff, pdf 3종으로 저장"""
+    import os
+    base, _ = os.path.splitext(save_path)
+    for fmt in ['png', 'tiff', 'pdf']:
+        out = f"{base}.{fmt}"
+        fig.savefig(out, dpi=dpi, bbox_inches=bbox_inches, pad_inches=pad_inches, format=fmt)
+    print(f"✅ Figure 저장: {base}.{{png,tiff,pdf}}")
+
+
 class ModelEvaluator:
     """모델 평가 클래스"""
     
@@ -148,9 +171,17 @@ class ModelEvaluator:
             feature_names: 특성 이름 리스트
             model_name: 모델 이름
         """
+        # 모델 표시 이름 매핑
+        display_names = {
+            'ann': 'MLP',
+            'decision_tree': 'Decision Tree',
+            'random_forest': 'Random Forest',
+            'xgboost': 'XGBoost',
+            'lightgbm': 'LightGBM',
+        }
         self.model = model
         self.feature_names = feature_names
-        self.model_name = model_name
+        self.model_name = display_names.get(model_name, model_name)
         self.results = {}
         self.optimal_threshold = None
         self.youden_index = None
@@ -305,8 +336,7 @@ class ModelEvaluator:
         plt.tight_layout()
         
         if save_path:
-            fig.savefig(save_path, dpi=300, bbox_inches='tight')
-            print(f"✅ ROC Curve 저장: {save_path}")
+            _save_figure(fig, save_path)
         
         return fig
     
@@ -340,8 +370,7 @@ class ModelEvaluator:
         plt.tight_layout()
         
         if save_path:
-            fig.savefig(save_path, dpi=300, bbox_inches='tight')
-            print(f"✅ PR Curve 저장: {save_path}")
+            _save_figure(fig, save_path)
         
         return fig
     
@@ -384,8 +413,7 @@ class ModelEvaluator:
         plt.tight_layout()
         
         if save_path:
-            fig.savefig(save_path, dpi=300, bbox_inches='tight')
-            print(f"✅ Calibration Curve 저장: {save_path}")
+            _save_figure(fig, save_path)
         
         return fig
     
@@ -425,8 +453,7 @@ class ModelEvaluator:
         plt.tight_layout()
         
         if save_path:
-            fig.savefig(save_path, dpi=300, bbox_inches='tight')
-            print(f"✅ Confusion Matrix 저장: {save_path}")
+            _save_figure(fig, save_path)
         
         return fig
     
@@ -494,8 +521,7 @@ class ModelEvaluator:
         plt.tight_layout()
         
         if save_path:
-            fig.savefig(save_path, dpi=300, bbox_inches='tight')
-            print(f"✅ Feature Importance 저장: {save_path}")
+            _save_figure(fig, save_path)
         
         return fig
 
@@ -648,7 +674,7 @@ class SHAPAnalyzer:
         X: np.ndarray,
         y: np.ndarray = None,
         background_data: np.ndarray = None,
-        max_samples: int = 2000
+        max_samples: int = 1000
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
         SHAP 값 계산
@@ -657,7 +683,7 @@ class SHAPAnalyzer:
             X: 설명할 데이터
             y: 타겟 변수 (stratified sampling용, None이면 랜덤 샘플링)
             background_data: 배경 데이터 (kernel SHAP용)
-            max_samples: 최대 샘플 수 (기본: 2000)
+            max_samples: 최대 샘플 수 (기본: 1000)
             
         Returns:
             (SHAP 값 배열, 샘플 데이터)
@@ -686,51 +712,69 @@ class SHAPAnalyzer:
         else:
             X_sample = X.copy()
         
+        # KernelExplainer는 느리므로 샘플 수 제한
+        kernel_max = 500
+        if self.model_type == 'kernel' and len(X_sample) > kernel_max:
+            np.random.seed(1004)
+            k_indices = np.random.choice(len(X_sample), kernel_max, replace=False)
+            X_sample = X_sample[k_indices]
+            print(f"   KernelExplainer용 추가 샘플링: -> {len(X_sample)} samples")
+        
         print(f"   샘플 수: {len(X_sample)}")
         print(f"   모델 타입: {self.model_type}")
         
         # Explainer 생성 및 SHAP 값 계산
-        try:
-            if self.model_type == 'tree':
-                self.explainer = shap.TreeExplainer(self.model)
-                raw_shap_values = self.explainer.shap_values(X_sample)
-                
-            elif self.model_type == 'linear':
-                self.explainer = shap.LinearExplainer(self.model, X_sample)
-                raw_shap_values = self.explainer.shap_values(X_sample)
-                
-            else:  # kernel (ANN, 기타 모델)
-                print("   KernelExplainer 사용 (시간이 오래 걸릴 수 있습니다)...")
-                if background_data is None:
-                    # 배경 데이터 샘플링 (계산 속도를 위해 작게)
-                    bg_size = min(100, len(X_sample))
-                    bg_indices = np.random.choice(len(X_sample), bg_size, replace=False)
-                    background_data = X_sample[bg_indices]
-                
-                # predict_proba의 positive class 확률만 사용
-                def predict_proba_positive(x):
-                    proba = self.model.predict_proba(x)
-                    if proba.ndim == 2 and proba.shape[1] == 2:
-                        return proba[:, 1]
-                    return proba
-                
-                self.explainer = shap.KernelExplainer(predict_proba_positive, background_data)
-                raw_shap_values = self.explainer.shap_values(X_sample, nsamples=100)
-                
-        except Exception as e:
-            print(f"   ⚠️ {self.model_type} explainer 실패, KernelExplainer로 폴백: {e}")
-            # Fallback to KernelExplainer
-            bg_size = min(50, len(X_sample))
-            bg_indices = np.random.choice(len(X_sample), bg_size, replace=False)
-            background_data = X_sample[bg_indices]
-            
+        # shap 0.32 호환: TreeExplainer 시도 후 실패 시 KernelExplainer 폴백
+        
+        def _make_kernel_explainer(bg_data):
+            """KernelExplainer 생성 헬퍼"""
             def predict_proba_positive(x):
                 proba = self.model.predict_proba(x)
                 if proba.ndim == 2 and proba.shape[1] == 2:
                     return proba[:, 1]
                 return proba
-            
-            self.explainer = shap.KernelExplainer(predict_proba_positive, background_data)
+            return shap.KernelExplainer(predict_proba_positive, bg_data)
+        
+        try:
+            if self.model_type == 'tree':
+                try:
+                    self.explainer = shap.TreeExplainer(self.model)
+                    raw_shap_values = self.explainer.shap_values(X_sample)
+                    print("   TreeExplainer 사용")
+                except Exception as te:
+                    print(f"   ⚠️ TreeExplainer 실패: {te}")
+                    print("   KernelExplainer로 폴백...")
+                    bg_size = min(50, len(X_sample))
+                    bg_indices = np.random.choice(len(X_sample), bg_size, replace=False)
+                    self.explainer = _make_kernel_explainer(X_sample[bg_indices])
+                    raw_shap_values = self.explainer.shap_values(X_sample, nsamples=100)
+                
+            elif self.model_type == 'linear':
+                try:
+                    self.explainer = shap.LinearExplainer(self.model, X_sample)
+                    raw_shap_values = self.explainer.shap_values(X_sample)
+                except Exception as le:
+                    print(f"   ⚠️ LinearExplainer 실패: {le}")
+                    bg_size = min(50, len(X_sample))
+                    bg_indices = np.random.choice(len(X_sample), bg_size, replace=False)
+                    self.explainer = _make_kernel_explainer(X_sample[bg_indices])
+                    raw_shap_values = self.explainer.shap_values(X_sample, nsamples=100)
+                
+            else:  # kernel (ANN, 기타 모델)
+                print("   KernelExplainer 사용...")
+                if background_data is None:
+                    bg_size = min(50, len(X_sample))
+                    bg_indices = np.random.choice(len(X_sample), bg_size, replace=False)
+                    background_data = X_sample[bg_indices]
+                
+                self.explainer = _make_kernel_explainer(background_data)
+                raw_shap_values = self.explainer.shap_values(X_sample, nsamples=200)
+                
+        except Exception as e:
+            print(f"   ⚠️ {self.model_type} explainer 실패, KernelExplainer로 폴백: {e}")
+            bg_size = min(50, len(X_sample))
+            bg_indices = np.random.choice(len(X_sample), bg_size, replace=False)
+            self.explainer = _make_kernel_explainer(X_sample[bg_indices])
             raw_shap_values = self.explainer.shap_values(X_sample, nsamples=100)
         
         # SHAP values를 2D 배열로 변환 (positive class)
@@ -770,7 +814,7 @@ class SHAPAnalyzer:
         if self.exclude_missing_indicator and feat_names != self.feature_names:
             print(f"   📊 Missing indicator 제외: {len(self.feature_names)} -> {len(feat_names)} 특성")
         
-        fig = plt.figure(figsize=(12, 10))
+        fig = plt.figure(figsize=(10, 10))
         shap.summary_plot(
             shap_vals, X_plot,
             feature_names=feat_names,
@@ -778,11 +822,19 @@ class SHAPAnalyzer:
             show=False
         )
         
-        plt.tight_layout()
+        # colorbar 크기 조정 - Feature Value bar가 잘 보이도록
+        for cb_ax in fig.get_axes():
+            # colorbar axes는 보통 매우 좁은 width를 가짐
+            pos = cb_ax.get_position()
+            if pos.width < 0.05 and pos.width < pos.height * 0.3:
+                # colorbar axes로 판단 → 너비를 키우고 위치 조정
+                cb_ax.set_position([pos.x0 + 0.02, pos.y0, 0.02, pos.height])
+                cb_ax.tick_params(labelsize=10)
+        
+        plt.tight_layout(rect=[0, 0, 0.92, 1], pad=1.0)
         
         if save_path:
-            fig.savefig(save_path, dpi=300, bbox_inches='tight')
-            print(f"✅ SHAP Summary Plot 저장: {save_path}")
+            _save_figure(fig, save_path, pad_inches=0.3)
         
         return fig
     
@@ -805,7 +857,7 @@ class SHAPAnalyzer:
             self.shap_values, dummy_X, self.feature_names
         )
         
-        fig = plt.figure(figsize=(10, 8))
+        fig = plt.figure(figsize=(10, 10))
         
         # SHAP 기본 bar plot 사용
         shap.summary_plot(
@@ -816,82 +868,16 @@ class SHAPAnalyzer:
             show=False
         )
         
-        plt.tight_layout()
+        # 1:1 비율 맞추기
+        fig.set_size_inches(10, 10)
+        plt.tight_layout(pad=1.0)
         
         if save_path:
-            fig.savefig(save_path, dpi=300, bbox_inches='tight')
-            print(f"✅ SHAP Bar Plot 저장: {save_path}")
+            _save_figure(fig, save_path, bbox_inches=None, pad_inches=0.3)
         
         return fig
     
-    def plot_waterfall(
-        self,
-        X: np.ndarray,
-        sample_idx: int = 0,
-        save_path: str = None
-    ) -> plt.Figure:
-        """SHAP Waterfall Plot for a single prediction"""
-        if self.shap_values is None:
-            self.compute_shap_values(X)
-        
-        # 인덱스 범위 확인
-        if sample_idx >= len(self.shap_values):
-            sample_idx = 0
-            print(f"⚠️ sample_idx가 범위를 벗어나 0으로 설정됨")
-        
-        fig = plt.figure(figsize=(12, 8))
-        
-        # expected_value가 이미 추출되어 있음
-        base_value = self.expected_value if self.expected_value is not None else 0.0
-        
-        shap.plots.waterfall(
-            shap.Explanation(
-                values=self.shap_values[sample_idx],
-                base_values=base_value,
-                data=X[sample_idx],
-                feature_names=self.feature_names
-            ),
-            show=False
-        )
-        
-        plt.tight_layout()
-        
-        if save_path:
-            fig.savefig(save_path, dpi=300, bbox_inches='tight')
-            print(f"✅ SHAP Waterfall Plot 저장: {save_path}")
-        
-        return fig
-    
-    def plot_dependence(
-        self,
-        X: np.ndarray,
-        feature: str,
-        save_path: str = None
-    ) -> plt.Figure:
-        """SHAP Dependence Plot"""
-        if self.shap_values is None:
-            self.compute_shap_values(X)
-        
-        fig = plt.figure(figsize=(10, 7))
-        
-        if self.feature_names and feature in self.feature_names:
-            feature_idx = self.feature_names.index(feature)
-        else:
-            feature_idx = int(feature) if isinstance(feature, str) and feature.isdigit() else 0
-        
-        shap.dependence_plot(
-            feature_idx, self.shap_values, X,
-            feature_names=self.feature_names,
-            show=False
-        )
-        
-        plt.tight_layout()
-        
-        if save_path:
-            fig.savefig(save_path, dpi=300, bbox_inches='tight')
-            print(f"✅ SHAP Dependence Plot 저장: {save_path}")
-        
-        return fig
+    # Note: waterfall and dependence plots removed for shap 0.32 compatibility
 
 
 def evaluate_model(
@@ -923,21 +909,9 @@ def evaluate_model(
     print(f"모델 평가: {model_name}")
     print("=" * 60)
     
-    # 모델 로드
-    if model_path.endswith('.json'):
-        import xgboost as xgb
-        model = xgb.XGBClassifier()
-        model.load_model(model_path)
-    elif model_path.endswith('.cbm'):
-        from catboost import CatBoostClassifier
-        model = CatBoostClassifier()
-        model.load_model(model_path)
-    elif model_path.endswith('.txt'):
-        import lightgbm as lgb
-        model = lgb.Booster(model_file=model_path)
-    else:
-        with open(model_path, 'rb') as f:
-            model = pickle.load(f)
+    # 모델 로드 (모든 모델 pkl로 통일)
+    with open(model_path, 'rb') as f:
+        model = pickle.load(f)
     
     # 데이터 로드
     X_test = np.load(os.path.join(data_dir, 'X_test.npy'))
@@ -1045,18 +1019,9 @@ def run_shap_analysis(
     print(f"SHAP 분석: {model_name}")
     print("=" * 60)
     
-    # 모델 로드
-    if model_path.endswith('.json'):
-        import xgboost as xgb
-        model = xgb.XGBClassifier()
-        model.load_model(model_path)
-    elif model_path.endswith('.cbm'):
-        from catboost import CatBoostClassifier
-        model = CatBoostClassifier()
-        model.load_model(model_path)
-    else:
-        with open(model_path, 'rb') as f:
-            model = pickle.load(f)
+    # 모델 로드 (모든 모델 pkl로 통일)
+    with open(model_path, 'rb') as f:
+        model = pickle.load(f)
     
     # 모델 타입 자동 감지
     if model_type is None:
@@ -1076,7 +1041,7 @@ def run_shap_analysis(
         model, feature_names, model_type,
         exclude_missing_indicator=exclude_missing_indicator
     )
-    shap_values, X_sample = analyzer.compute_shap_values(X_test, y=y_test, max_samples=2000)
+    shap_values, X_sample = analyzer.compute_shap_values(X_test, y=y_test, max_samples=1000)
     
     # 시각화
     model_output_dir = os.path.join(output_dir, model_name)

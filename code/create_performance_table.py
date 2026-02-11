@@ -167,26 +167,11 @@ def format_metric_with_ci(point: float, lower: float, upper: float, decimals: in
 
 
 def load_model(model_path: str) -> Any:
-    """모델 로드"""
+    """모델 로드 (모든 모델 pkl로 통일)"""
     try:
-        if model_path.endswith('.json'):
-            import xgboost as xgb
-            model = xgb.XGBClassifier()
-            model.load_model(model_path)
-        elif model_path.endswith('.cbm'):
-            from catboost import CatBoostClassifier
-            model = CatBoostClassifier()
-            model.load_model(model_path)
-        elif model_path.endswith('.txt'):
-            import lightgbm as lgb
-            model = lgb.Booster(model_file=model_path)
-        else:
-            with open(model_path, 'rb') as f:
-                model = pickle.load(f)
+        with open(model_path, 'rb') as f:
+            model = pickle.load(f)
         return model
-    except ImportError as e:
-        print(f"⚠️ 모델 로드 실패 (모듈 미설치): {os.path.basename(model_path)} - {e}")
-        return None
     except Exception as e:
         print(f"⚠️ 모델 로드 실패: {os.path.basename(model_path)} - {e}")
         return None
@@ -301,10 +286,19 @@ def create_performance_table(
         'threshold': 'Optimal Threshold'
     }
     
+    # 모델 표시 이름 매핑
+    display_names = {
+        'decision_tree': 'Decision Tree',
+        'random_forest': 'Random Forest',
+        'xgboost': 'XGBoost',
+        'lightgbm': 'LightGBM',
+        'ann': 'MLP',
+    }
+    
     # DataFrame 구성
     rows = []
     for model_name, results in all_results.items():
-        row = {'Model': model_name}
+        row = {'Model': display_names.get(model_name, model_name)}
         for metric in metrics_order:
             if metric in results:
                 m = results[metric]

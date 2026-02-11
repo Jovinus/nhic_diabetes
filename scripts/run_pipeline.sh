@@ -43,7 +43,7 @@ SKIP_DUMMY=false
 SMALL_GRID=""
 N_BOOTSTRAP=1000
 TARGETS="outA out2"
-MODELS="decision_tree random_forest xgboost catboost ann"
+MODELS="decision_tree random_forest xgboost lightgbm ann"
 
 # 인자 파싱
 while [[ $# -gt 0 ]]; do
@@ -172,9 +172,10 @@ for TARGET in $TARGETS; do
     echo -e "${YELLOW}[${TARGET}] Step 5: 모델 평가 및 SHAP 분석${NC}"
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     
-    for model_file in ${MODELS_DIR}/*_best_model.*; do
+    # 학습 순서대로 모델 평가 (glob은 filesystem order라 순서 보장 안됨)
+    for model_name in $MODELS; do
+        model_file="${MODELS_DIR}/${model_name}_best_model.pkl"
         if [ -f "$model_file" ]; then
-            model_name=$(basename "$model_file" | sed 's/_best_model.*//')
             echo -e "\n${BLUE}📊 ${model_name} 평가 중...${NC}"
             python evaluate.py \
                 --model "$model_file" \
