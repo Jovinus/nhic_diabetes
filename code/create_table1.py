@@ -136,31 +136,38 @@ def create_train_test_table(
             'test': 'Validation'
         })
     
-    # TableOne 생성 (하위 버전 호환 - overall 파라미터 유무 확인)
-    import inspect
-    tableone_params = inspect.signature(TableOne.__init__).parameters
-    
+    # 컬럼명을 영어 레이블로 변경 (rename 파라미터 미지원 버전 대응)
+    df_for_table = df_labeled.copy()
+    col_rename = {k: v for k, v in VARIABLE_LABELS.items() if k in df_for_table.columns}
+    df_for_table = df_for_table.rename(columns=col_rename)
+    all_vars = [VARIABLE_LABELS.get(v, v) for v in all_vars]
+    categorical_vars_display = [VARIABLE_LABELS.get(v, v) for v in categorical_vars]
+
+    # TableOne 생성 (tableone 0.7.12 호환: rename/missing 파라미터 미사용)
     tableone_kwargs = dict(
-        data=df_labeled,
+        data=df_for_table,
         columns=all_vars,
-        categorical=categorical_vars,
+        categorical=categorical_vars_display,
         groupby=split_col,
         pval=True,
-        rename=VARIABLE_LABELS,
-        missing=True,
     )
-    if 'overall' in tableone_params:
-        tableone_kwargs['overall'] = True
-    if 'htest_name' in tableone_params:
-        tableone_kwargs['htest_name'] = True
-    
-    table = TableOne(**tableone_kwargs
-    )
+
+    # overall, htest_name은 버전에 따라 지원 여부가 다름
+    try:
+        table = TableOne(overall=True, htest_name=True, **tableone_kwargs)
+    except TypeError:
+        try:
+            table = TableOne(overall=True, **tableone_kwargs)
+        except TypeError:
+            table = TableOne(**tableone_kwargs)
     
     print("\n" + "=" * 70)
     print("📊 Train vs Test 비교 테이블")
     print("=" * 70)
-    print(table.tabulate(tablefmt="grid"))
+    if hasattr(table, 'tabulate'):
+        print(table.tabulate(tablefmt="grid"))
+    else:
+        print(str(table))
     
     # 저장
     if output_path:
@@ -215,31 +222,40 @@ def create_outcome_table(
     # 범주형 레이블 적용
     df_labeled = apply_category_labels(df, categorical_vars + [outcome_col])
     
-    # TableOne 생성 (하위 버전 호환)
-    import inspect
-    tableone_params = inspect.signature(TableOne.__init__).parameters
-    
+    # 컬럼명을 영어 레이블로 변경 (rename 파라미터 미지원 버전 대응)
+    df_for_table = df_labeled.copy()
+    col_rename = {k: v for k, v in VARIABLE_LABELS.items() if k in df_for_table.columns}
+    df_for_table = df_for_table.rename(columns=col_rename)
+    all_vars = [VARIABLE_LABELS.get(v, v) for v in all_vars]
+    categorical_vars_display = [VARIABLE_LABELS.get(v, v) for v in categorical_vars]
+    outcome_col_display = VARIABLE_LABELS.get(outcome_col, outcome_col)
+
+    # TableOne 생성 (tableone 0.7.12 호환: rename/missing 파라미터 미사용)
     tableone_kwargs = dict(
-        data=df_labeled,
+        data=df_for_table,
         columns=all_vars,
-        categorical=categorical_vars,
-        groupby=outcome_col,
+        categorical=categorical_vars_display,
+        groupby=outcome_col_display,
         pval=True,
-        rename=VARIABLE_LABELS,
-        missing=True,
     )
-    if 'overall' in tableone_params:
-        tableone_kwargs['overall'] = True
-    if 'htest_name' in tableone_params:
-        tableone_kwargs['htest_name'] = True
-    
-    table = TableOne(**tableone_kwargs)
-    
+
+    # overall, htest_name은 버전에 따라 지원 여부가 다름
+    try:
+        table = TableOne(overall=True, htest_name=True, **tableone_kwargs)
+    except TypeError:
+        try:
+            table = TableOne(overall=True, **tableone_kwargs)
+        except TypeError:
+            table = TableOne(**tableone_kwargs)
+
     outcome_name = VARIABLE_LABELS.get(outcome_col, outcome_col)
     print("\n" + "=" * 70)
     print(f"📊 Baseline Characteristics by {outcome_name}")
     print("=" * 70)
-    print(table.tabulate(tablefmt="grid"))
+    if hasattr(table, 'tabulate'):
+        print(table.tabulate(tablefmt="grid"))
+    else:
+        print(str(table))
     
     # 저장
     if output_path:
