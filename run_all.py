@@ -37,6 +37,7 @@ def run_pipeline(
     skip_dummy=False,
     small_grid=False,
     n_bootstrap=1000,
+    n_samples=10000,
     cv_folds=5,
     scoring='roc_auc',
     missing_threshold=0.05,
@@ -69,7 +70,7 @@ def run_pipeline(
     if not skip_dummy:
         print("\n[Step 1] Generating dummy data...")
         from make_dummy import generate_dummy_data
-        df = generate_dummy_data(n_samples=10000)
+        df = generate_dummy_data(n_samples=n_samples)
         os.makedirs(os.path.dirname(data_path), exist_ok=True)
         df.to_csv(data_path, index=False)
         print(f"  Saved: {data_path} ({len(df)} samples)")
@@ -268,6 +269,8 @@ def main():
                         help='Path to data CSV file')
     parser.add_argument('--cv', type=int, default=5,
                         help='CV folds')
+    parser.add_argument('--n-samples', type=int, default=10000,
+                        help='Number of dummy data samples')
     parser.add_argument('--use-gpu', action='store_true',
                         help='Enable GPU for XGBoost (gpu_hist)')
 
@@ -279,6 +282,7 @@ def main():
         skip_dummy=args.skip_dummy,
         small_grid=args.small_grid,
         n_bootstrap=args.n_bootstrap,
+        n_samples=args.n_samples,
         cv_folds=args.cv,
         data_path=args.data,
         use_gpu=args.use_gpu
