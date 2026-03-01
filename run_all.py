@@ -40,14 +40,15 @@ def run_pipeline(
     cv_folds=5,
     scoring='roc_auc',
     missing_threshold=0.05,
-    data_path=None
+    data_path=None,
+    use_gpu=False
 ):
     """전체 파이프라인 실행"""
     
     if targets is None:
         targets = ['outA', 'out2']
     if models is None:
-        models = ['decision_tree', 'random_forest', 'xgboost', 'lightgbm', 'ann']
+        models = ['logistic_regression', 'decision_tree', 'random_forest', 'xgboost', 'lightgbm', 'ann']
     if data_path is None:
         data_path = os.path.join(SCRIPT_DIR, 'data', 'dummy_diabetes_data.csv')
     
@@ -59,6 +60,7 @@ def run_pipeline(
     print(f"  Small grid: {small_grid}")
     print(f"  Bootstrap: {n_bootstrap}")
     print(f"  Data: {data_path}")
+    print(f"  GPU: {use_gpu}")
     print("=" * 70)
     
     # =========================================================================
@@ -78,6 +80,7 @@ def run_pipeline(
     # For each target
     # =========================================================================
     from create_table1 import create_all_tables
+    from crude_adjusted_or import run_or_analysis
     from preprocessing import preprocess_and_save
     from train_gridsearch import ModelTrainer
     from evaluate import evaluate_model, run_shap_analysis
@@ -113,6 +116,19 @@ def run_pipeline(
             print(f"  Error: {e}")
         
         # =====================================================================
+        # Step 2.5: Crude/Adjusted OR Analysis
+        # =====================================================================
+        print(f"\n--- [{target}] Step 2.5: OR Analysis ---")
+        try:
+            run_or_analysis(
+                data_path=data_path,
+                output_dir=tables_dir,
+                target_col=target
+            )
+        except Exception as e:
+            print(f"  Error: {e}")
+
+        # =====================================================================
         # Step 3: Preprocessing
         # =====================================================================
         print(f"\n--- [{target}] Step 3: Preprocessing ---")
@@ -145,7 +161,8 @@ def run_pipeline(
         print(f"\n--- [{target}] Step 4: Model Training ---")
         
         trainer = ModelTrainer(
-            cv=cv_folds, scoring=scoring, use_small_grid=small_grid
+            cv=cv_folds, scoring=scoring, use_small_grid=small_grid,
+            use_gpu=use_gpu
         )
         
         for model_name in models:
@@ -230,6 +247,7 @@ def run_pipeline(
         print(f"    Models:     models/{target}/")
         print(f"    Results:    results/{target}/")
         print(f"    Tables:     results/{target}/tables/")
+        print(f"    OR Table:   results/{target}/tables/or_analysis_{target}.xlsx")
         print(f"    Comparison: results/{target}/comparison/")
 
 
@@ -244,15 +262,17 @@ def main():
     parser.add_argument('--targets', type=str, default='outA out2',
                         help='Target variables (space-separated)')
     parser.add_argument('--models', type=str, 
-                        default='decision_tree random_forest xgboost lightgbm ann',
+                        default='logistic_regression decision_tree random_forest xgboost lightgbm ann',
                         help='Models to train (space-separated)')
     parser.add_argument('--data', type=str, default=None,
                         help='Path to data CSV file')
     parser.add_argument('--cv', type=int, default=5,
                         help='CV folds')
-    
+    parser.add_argument('--use-gpu', action='store_true',
+                        help='Enable GPU for XGBoost (gpu_hist)')
+
     args = parser.parse_args()
-    
+
     run_pipeline(
         targets=args.targets.split(),
         models=args.models.split(),
@@ -260,7 +280,8 @@ def main():
         small_grid=args.small_grid,
         n_bootstrap=args.n_bootstrap,
         cv_folds=args.cv,
-        data_path=args.data
+        data_path=args.data,
+        use_gpu=args.use_gpu
     )
 
 

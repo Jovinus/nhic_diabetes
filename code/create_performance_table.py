@@ -288,10 +288,11 @@ def create_performance_table(
     
     # 모델 표시 이름 매핑
     display_names = {
-        'decision_tree': 'Decision Tree',
-        'random_forest': 'Random Forest',
-        'xgboost': 'XGBoost',
-        'lightgbm': 'LightGBM',
+        'logistic_regression': 'LR',
+        'decision_tree': 'DT',
+        'random_forest': 'RF',
+        'xgboost': 'XGB',
+        'lightgbm': 'LGBM',
         'ann': 'MLP',
     }
     

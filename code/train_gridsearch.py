@@ -24,6 +24,7 @@ from sklearn.metrics import (
     roc_auc_score, average_precision_score, accuracy_score, precision_score, recall_score, 
     f1_score, confusion_matrix, classification_report
 )
+from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 
 # XGBoost (0.80)
@@ -91,6 +92,13 @@ PARAM_GRIDS = {
         'alpha': [0.0001, 0.001, 0.01],
         'learning_rate_init': [0.001, 0.01],
         'max_iter': [500]
+    },
+
+    'logistic_regression': {
+        'C': [0.001, 0.01, 0.1, 1, 10],
+        'penalty': ['l2'],
+        'solver': ['lbfgs'],
+        'max_iter': [1000]
     }
 }
 
@@ -136,6 +144,13 @@ PARAM_GRIDS_SMALL = {
         'alpha': [0.001],
         'learning_rate_init': [0.001],
         'max_iter': [500]
+    },
+
+    'logistic_regression': {
+        'C': [0.1, 1, 10],
+        'penalty': ['l2'],
+        'solver': ['lbfgs'],
+        'max_iter': [1000]
     }
 }
 
@@ -149,14 +164,16 @@ class ModelTrainer:
         cv: int = 5,
         scoring: str = 'roc_auc',
         n_jobs: int = -1,
-        use_small_grid: bool = False
+        use_small_grid: bool = False,
+        use_gpu: bool = False
     ):
         self.random_state = random_state
         self.cv = cv
         self.scoring = scoring
         self.n_jobs = n_jobs
         self.param_grids = PARAM_GRIDS_SMALL if use_small_grid else PARAM_GRIDS
-        
+        self.use_gpu = use_gpu
+
         self.models = {}
         self.best_params = {}
         self.cv_results = {}
@@ -174,16 +191,23 @@ class ModelTrainer:
             if not HAS_XGB:
                 raise ImportError("XGBoost가 설치되어 있지 않습니다.")
             # xgboost 0.80 호환 - use_label_encoder, verbosity 등 없음
-            return xgb.XGBClassifier(
+            xgb_params = dict(
                 seed=self.random_state,
                 nthread=self.n_jobs,
                 silent=True,
                 objective='binary:logistic'
             )
-        
+            if self.use_gpu:
+                xgb_params['tree_method'] = 'gpu_hist'
+                xgb_params['gpu_id'] = 0
+                print("  XGBoost: GPU 모드 활성화 (tree_method='gpu_hist')")
+            return xgb.XGBClassifier(**xgb_params)
+
         elif model_name == 'lightgbm':
             if not HAS_LGB:
                 raise ImportError("LightGBM이 설치되어 있지 않습니다.")
+            if self.use_gpu:
+                print("  LightGBM: GPU 빌드 미포함, CPU로 실행합니다.")
             return lgb.LGBMClassifier(
                 random_state=self.random_state,
                 n_jobs=self.n_jobs,
@@ -196,7 +220,10 @@ class ModelTrainer:
                 early_stopping=True,
                 validation_fraction=0.1
             )
-        
+
+        elif model_name == 'logistic_regression':
+            return LogisticRegression(random_state=self.random_state)
+
         else:
             raise ValueError(f"지원하지 않는 모델: {model_name}")
     
@@ -406,6 +433,7 @@ def train_all_models(
         if HAS_LGB:
             model_list.append('lightgbm')
         model_list.append('ann')
+        model_list.append('logistic_regression')
     
     print("=" * 60)
     print("🚀 GridSearchCV 모델 학습 시작")
@@ -472,7 +500,7 @@ def main():
     parser.add_argument('--output', type=str, default='../models',
                         help='모델 저장 디렉토리')
     parser.add_argument('--models', type=str, nargs='+', 
-                        default=['decision_tree', 'random_forest', 'xgboost', 'lightgbm', 'ann'],
+                        default=['decision_tree', 'random_forest', 'xgboost', 'lightgbm', 'ann', 'logistic_regression'],
                         help='학습할 모델 리스트')
     parser.add_argument('--small-grid', action='store_true',
                         help='축소된 파라미터 그리드 사용 (빠른 테스트용)')

@@ -173,11 +173,12 @@ class ModelEvaluator:
         """
         # 모델 표시 이름 매핑
         display_names = {
+            'logistic_regression': 'LR',
+            'decision_tree': 'DT',
+            'random_forest': 'RF',
+            'xgboost': 'XGB',
+            'lightgbm': 'LGBM',
             'ann': 'MLP',
-            'decision_tree': 'Decision Tree',
-            'random_forest': 'Random Forest',
-            'xgboost': 'XGBoost',
-            'lightgbm': 'LightGBM',
         }
         self.model = model
         self.feature_names = feature_names

@@ -21,48 +21,50 @@ except ImportError:
     print("   pip install tableone")
 
 
-# 변수 정의
+# 변수 정의 (증례기록지 기준)
 CONTINUOUS_VARS = [
     'age', 'BMI', 'SBP', 'DBP', 'FBS', 'TOT_CHOL', 'WAIST',
-    'TG', 'HDL_CHOL', 'Creatinine', 'LDL_CHOL'
+    'TG', 'HDL_CHOL', 'LDL_CHOL', 'Creatinine'
 ]
 
 CATEGORICAL_VARS = [
-    'gender', 'smoking', 'drink', 'training', 'proteinUria',
-    'co_HLD', 'co_HTN', 'co_fattyLiver', 'co_Impaird', 'BMIG', 'metS', 'group'
+    'diag', 'act', 'gender', 'smoking', 'drink', 'training', 'proteinUria',
+    'co_HLD', 'co_HTN', 'co_fattyLiver', 'co_Impaird', 'metS'
 ]
 
-# Variable labels (English)
+# Variable labels (증례기록지 기준)
 VARIABLE_LABELS = {
     'age': 'Age (years)',
-    'gender': 'Sex',
     'BMI': 'BMI (kg/m²)',
-    'SBP': 'Systolic BP (mmHg)',
-    'DBP': 'Diastolic BP (mmHg)',
-    'FBS': 'Fasting glucose (mg/dL)',
+    'SBP': 'SBP (mmHg)',
+    'DBP': 'DBP (mmHg)',
+    'FBS': 'Glucose (mg/dL)',
     'TOT_CHOL': 'Total cholesterol (mg/dL)',
+    'WAIST': 'Waist (cm)',
     'TG': 'Triglyceride (mg/dL)',
     'HDL_CHOL': 'HDL cholesterol (mg/dL)',
     'LDL_CHOL': 'LDL cholesterol (mg/dL)',
-    'WAIST': 'Waist circumference (cm)',
     'Creatinine': 'Creatinine (mg/dL)',
-    'smoking': 'Smoking status',
-    'drink': 'Alcohol (≥2/week)',
-    'training': 'Exercise (≥3/week)',
+    'diag': 'Cholelithiasis',
+    'act': 'Cholecystectomy',
+    'gender': 'Sex',
+    'smoking': 'Smoking',
+    'drink': 'Alcohol',
+    'training': 'Training',
     'proteinUria': 'Proteinuria',
-    'co_HLD': 'Hyperlipidemia',
+    'co_HLD': 'Dyslipidemia',
     'co_HTN': 'Hypertension',
     'co_fattyLiver': 'Fatty liver',
-    'co_Impaird': 'Impaired glucose tolerance',
-    'BMIG': 'BMI group',
+    'co_Impaird': 'Impaired fasting glucose',
     'metS': 'Metabolic syndrome',
-    'group': 'Diagnosis group',
     'outA': 'Diabetes incidence',
     'out2': 'T2DM incidence'
 }
 
 # Category labels (English)
 CATEGORY_LABELS = {
+    'diag': {0: 'No', 1: 'Yes'},
+    'act': {0: 'No', 1: 'Yes'},
     'gender': {0: 'Male', 1: 'Female'},
     'smoking': {0: 'Never', 1: 'Former', 2: 'Current'},
     'drink': {0: 'No', 1: 'Yes'},
@@ -72,9 +74,7 @@ CATEGORY_LABELS = {
     'co_HTN': {0: 'No', 1: 'Yes'},
     'co_fattyLiver': {0: 'No', 1: 'Yes'},
     'co_Impaird': {0: 'No', 1: 'Yes'},
-    'BMIG': {0: 'Normal (<25)', 1: 'Overweight (25-30)', 2: 'Obese (≥30)'},
     'metS': {0: 'No', 1: 'Yes'},
-    'group': {1: 'GS+/Op-', 2: 'GS+/Op+', 3: 'GS-'},
     'outA': {0: 'No', 1: 'Yes'},
     'out2': {0: 'No', 1: 'Yes'}
 }

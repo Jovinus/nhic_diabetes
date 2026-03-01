@@ -79,35 +79,35 @@ set_font()
 
 # 모델 표시 이름
 MODEL_DISPLAY_NAMES = {
-    'decision_tree': 'Decision Tree',
-    'random_forest': 'Random Forest',
-    'xgboost': 'XGBoost',
-    'catboost': 'CatBoost',
-    'lightgbm': 'LightGBM',
+    'logistic_regression': 'LR',
+    'decision_tree': 'DT',
+    'random_forest': 'RF',
+    'xgboost': 'XGB',
+    'lightgbm': 'LGBM',
     'ann': 'MLP',
-    'logistic': 'Logistic Regression'
+    'catboost': 'CatBoost',
 }
 
 # 모델별 색상
 MODEL_COLORS = {
-    'decision_tree': '#1f77b4',
-    'random_forest': '#ff7f0e',
-    'xgboost': '#2ca02c',
-    'catboost': '#d62728',
+    'logistic_regression': '#1f77b4',
+    'decision_tree': '#ff7f0e',
+    'random_forest': '#2ca02c',
+    'xgboost': '#d62728',
     'lightgbm': '#9467bd',
     'ann': '#8c564b',
-    'logistic': '#e377c2'
+    'catboost': '#e377c2',
 }
 
 # 모델별 라인 스타일
 MODEL_LINESTYLES = {
+    'logistic_regression': '--',
     'decision_tree': '-',
     'random_forest': '-',
     'xgboost': '-',
-    'catboost': '-',
     'lightgbm': '-',
     'ann': '--',
-    'logistic': '--'
+    'catboost': '-',
 }
 
 
@@ -136,12 +136,12 @@ def find_models(models_dir: str) -> Dict[str, str]:
     models = {}
     
     patterns = [
+        ('logistic_regression', 'logistic_regression_best_model.pkl'),
         ('decision_tree', 'decision_tree_best_model.pkl'),
         ('random_forest', 'random_forest_best_model.pkl'),
         ('xgboost', 'xgboost_best_model.pkl'),
         ('lightgbm', 'lightgbm_best_model.pkl'),
         ('ann', 'ann_best_model.pkl'),
-        ('logistic', 'logistic_best_model.pkl')
     ]
     
     for model_name, filename in patterns:

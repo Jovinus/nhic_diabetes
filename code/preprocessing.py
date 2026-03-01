@@ -15,24 +15,48 @@ import pickle
 import os
 
 
-# 특성 변수 정의
+# 특성 변수 정의 (증례기록지 기준)
 NUMERIC_FEATURES = [
-    'age', 'BMI', 'SBP', 'DBP', 'FBS', 'TOT_CHOL', 'WAIST', 
-    'TG', 'HDL_CHOL', 'Creatinine', 'LDL_CHOL'
+    'age', 'BMI', 'SBP', 'DBP', 'FBS', 'TOT_CHOL', 'WAIST',
+    'TG', 'HDL_CHOL', 'LDL_CHOL', 'Creatinine'
 ]
 
 CATEGORICAL_FEATURES = [
-    'gender', 'smoking', 'drink', 'training', 'proteinUria', 
-    'co_HLD', 'co_HTN', 'co_fattyLiver', 'co_Impaird', 'BMIG', 'metS', 'group'
+    'diag', 'act', 'gender', 'smoking', 'drink', 'training', 'proteinUria',
+    'co_HLD', 'co_HTN', 'co_fattyLiver', 'co_Impaird', 'metS'
 ]
-
-# LDL_CHOL은 결측이 많아서 선택적으로 사용
-FEATURES_WITHOUT_LDL = [f for f in NUMERIC_FEATURES if f != 'LDL_CHOL']
 
 # 타겟 변수
 TARGET_VARS = {
     'outA': '당뇨병 발생',
     'out2': '2형 당뇨병 발생'
+}
+
+# Feature 이름 매핑 (내부 변수명 → 증례기록지 표시명)
+FEATURE_RENAME = {
+    'age': 'Age',
+    'BMI': 'BMI',
+    'SBP': 'SBP',
+    'DBP': 'DBP',
+    'FBS': 'Glucose',
+    'TOT_CHOL': 'Total cholesterol',
+    'WAIST': 'Waist',
+    'TG': 'Triglyceride',
+    'HDL_CHOL': 'HDL cholesterol',
+    'LDL_CHOL': 'LDL cholesterol',
+    'Creatinine': 'Creatinine',
+    'diag': 'Cholelithiasis',
+    'act': 'Cholecystectomy',
+    'gender': 'Sex',
+    'smoking': 'Smoking',
+    'drink': 'Alcohol',
+    'training': 'Training',
+    'proteinUria': 'Proteinuria',
+    'co_HLD': 'Dyslipidemia',
+    'co_HTN': 'Hypertension',
+    'co_fattyLiver': 'Fatty liver',
+    'co_Impaird': 'Impaired fasting glucose',
+    'metS': 'Metabolic syndrome',
 }
 
 # Missing Indicator 접미사
@@ -49,7 +73,6 @@ class DiabetesPreprocessor:
         target_col: str = 'outA',
         impute_strategy: str = 'median',
         scale_numeric: bool = True,
-        use_ldl: bool = False,
         add_missing_indicator: bool = False,
         missing_threshold: float = 0.01
     ):
@@ -60,15 +83,10 @@ class DiabetesPreprocessor:
             target_col: 타겟 변수 컬럼명
             impute_strategy: 결측치 대체 전략 ('mean', 'median', 'most_frequent')
             scale_numeric: 연속형 변수 정규화 여부
-            use_ldl: LDL_CHOL 사용 여부 (결측 많음)
             add_missing_indicator: 결측치 지시자 특성 추가 여부
             missing_threshold: 이 비율 이상 결측이 있는 변수만 indicator 추가 (0.01 = 1%)
         """
-        if use_ldl:
-            self.numeric_features = numeric_features or NUMERIC_FEATURES.copy()
-        else:
-            self.numeric_features = numeric_features or FEATURES_WITHOUT_LDL.copy()
-        
+        self.numeric_features = numeric_features or NUMERIC_FEATURES.copy()
         self.categorical_features = categorical_features or CATEGORICAL_FEATURES.copy()
         self.target_col = target_col
         self.impute_strategy = impute_strategy
@@ -128,14 +146,16 @@ class DiabetesPreprocessor:
             imputed_numeric = self.numeric_imputer.transform(numeric_data)
             self.scaler.fit(imputed_numeric)
         
-        # 특성 이름 저장
-        base_feature_names = self.numeric_features + self.categorical_features
+        # 특성 이름 저장 (증례기록지 표시명으로 변환)
+        base_feature_names = [
+            FEATURE_RENAME.get(f, f) for f in self.numeric_features + self.categorical_features
+        ]
         self.feature_names_without_missing = base_feature_names.copy()
-        
+
         # Missing indicator 특성 이름 추가
         if self.add_missing_indicator and self.missing_indicator_features:
             missing_indicator_names = [
-                f"{feat}{MISSING_INDICATOR_SUFFIX}" 
+                f"{FEATURE_RENAME.get(feat, feat)}{MISSING_INDICATOR_SUFFIX}"
                 for feat in self.missing_indicator_features
             ]
             self.feature_names = base_feature_names + missing_indicator_names
@@ -307,21 +327,19 @@ def preprocess_and_save(
     target_col: str = 'outA',
     test_size: float = 0.2,
     val_size: float = 0.1,
-    use_ldl: bool = False,
     scale_numeric: bool = True,
     add_missing_indicator: bool = False,
     missing_threshold: float = 0.01
 ):
     """
     전처리 수행 및 저장
-    
+
     Args:
         data_path: 원본 데이터 경로
         output_dir: 출력 디렉토리
         target_col: 타겟 변수
         test_size: 테스트 세트 비율
         val_size: 검증 세트 비율
-        use_ldl: LDL_CHOL 사용 여부
         scale_numeric: 정규화 여부
         add_missing_indicator: Missing indicator 추가 여부
         missing_threshold: Missing indicator 추가 기준 결측률 (기본 1%)
@@ -340,7 +358,6 @@ def preprocess_and_save(
     # 전처리기 초기화 및 학습 (훈련 데이터로만)
     preprocessor = DiabetesPreprocessor(
         target_col=target_col,
-        use_ldl=use_ldl,
         scale_numeric=scale_numeric,
         add_missing_indicator=add_missing_indicator,
         missing_threshold=missing_threshold
@@ -425,8 +442,6 @@ def main():
                         help='테스트 세트 비율')
     parser.add_argument('--val-size', type=float, default=0.1,
                         help='검증 세트 비율')
-    parser.add_argument('--use-ldl', action='store_true',
-                        help='LDL_CHOL 사용 (결측 많음)')
     parser.add_argument('--no-scale', action='store_true',
                         help='정규화 비활성화')
     parser.add_argument('--add-missing-indicator', action='store_true',
@@ -442,7 +457,6 @@ def main():
         target_col=args.target,
         test_size=args.test_size,
         val_size=args.val_size,
-        use_ldl=args.use_ldl,
         scale_numeric=not args.no_scale,
         add_missing_indicator=args.add_missing_indicator,
         missing_threshold=args.missing_threshold
