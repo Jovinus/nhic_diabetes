@@ -54,14 +54,14 @@ def run_full_pipeline(args):
     )
 
 
-def run_pdf_report():
+def run_pdf_report(n_bootstrap=1000):
     """Step 2: PDF 보고서 생성 (한글 + 영문)."""
     print("\n" + "=" * 70)
     print("  [2/3] PDF Report Generation")
     print("=" * 70)
 
     from create_pdf_report import create_pdf_report
-    create_pdf_report()
+    create_pdf_report(n_bootstrap=n_bootstrap)
 
 
 def export_all(targets):
@@ -173,7 +173,7 @@ def main():
         print("  Skipping ML pipeline (--skip-pipeline)")
 
     # Step 2: PDF report
-    run_pdf_report()
+    run_pdf_report(n_bootstrap=args.n_bootstrap)
 
     # Step 3: Export
     export_all(args.targets.split())

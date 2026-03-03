@@ -73,28 +73,7 @@ T = {
         'ko': '머신러닝 예측 모델 개발 및 위험인자 분석 보고서',
         'en': 'ML Prediction Model Development & Risk Factor Analysis Report',
     },
-    'title_info': {
-        'ko': (
-            '데이터: 국민건강보험공단 건강검진 코호트\n'
-            '          (파이프라인 검증용 합성 데이터, N=10,000)\n\n'
-            '연구 가설: 담석증 진단 여부 및 담낭절제술 시행 여부가\n'
-            '          당뇨병 발생에 영향을 미치는가?\n\n'
-            'Outcome: outA (당뇨병 전체)  /  out2 (2형 당뇨병)\n\n'
-            '모델: LR, Decision Tree, Random Forest,\n'
-            '       XGBoost, LightGBM, ANN (MLP)\n\n'
-            '분석일: {date}'
-        ),
-        'en': (
-            'Data: NHIC Health Checkup Cohort\n'
-            '       (Synthetic data, N=10,000, for pipeline validation)\n\n'
-            'Hypothesis: Whether cholelithiasis diagnosis and/or\n'
-            '       cholecystectomy affect diabetes incidence\n\n'
-            'Outcomes: outA (Any Diabetes) / out2 (Type 2 Diabetes)\n\n'
-            'Models: LR, Decision Tree, Random Forest,\n'
-            '       XGBoost, LightGBM, ANN (MLP)\n\n'
-            'Date: {date}'
-        ),
-    },
+    # title_info: generated dynamically by _title_info(stats, lang)
 
     # ── Overview ──
     'sec_overview': {'ko': '1. 연구 개요', 'en': '1. Study Overview'},
@@ -117,36 +96,20 @@ T = {
         ),
     },
     'data_overview': {'ko': '데이터 개요', 'en': 'Data Overview'},
-    'data_rows': {
-        'ko': [['전체 대상자', '10,000명 (담석증 유/무 포함)'],
-               ['훈련 세트 (70%)', '7,000명'],
-               ['검증 세트 (10%)', '1,000명'],
-               ['테스트 세트 (20%)', '2,000명'],
-               ['입력 변수', '23개 + Missing indicator 2개']],
-        'en': [['Total Subjects', '10,000 (with & without cholelithiasis)'],
-               ['Training Set (70%)', '7,000'],
-               ['Validation Set (10%)', '1,000'],
-               ['Test Set (20%)', '2,000'],
-               ['Input Features', '23 + 2 missing indicators']],
-    },
+    # data_rows: generated dynamically by _data_rows(stats, lang)
     'data_headers': {'ko': ['항목', '값'], 'en': ['Item', 'Value']},
     'outcome_title': {'ko': 'Outcome 분포', 'en': 'Outcome Distribution'},
     'outcome_headers': {
         'ko': ['Outcome', '양성(n)', '음성(n)', '발생률'],
         'en': ['Outcome', 'Positive', 'Negative', 'Incidence'],
     },
-    'outcome_rows': {
-        'ko': [['outA (당뇨병)', '3,139', '6,861', '31.4%'],
-               ['out2 (2형 당뇨병)', '2,771', '7,229', '27.7%']],
-        'en': [['outA (Any Diabetes)', '3,139', '6,861', '31.4%'],
-               ['out2 (Type 2 Diabetes)', '2,771', '7,229', '27.7%']],
-    },
+    # outcome_rows: generated dynamically by _outcome_rows(stats, lang)
     'methods_title': {'ko': '분석 방법', 'en': 'Methods'},
     'methods': {
         'ko': [
             ('전처리',
              '연속형: 중앙값 대체 + StandardScaler  |  범주형: 최빈값 대체\n'
-             'Missing Indicator: 결측률 5% 이상 변수에 추가 (LDL, Proteinuria)'),
+             'Missing Indicator: 결측률 5% 이상 변수에 추가'),
             ('OR 분석',
              'Crude OR (단변량) + Adjusted OR (3단계 보정 모델, diag/act)'),
             ('모델 학습',
@@ -291,24 +254,7 @@ T = {
         'ko': ['보정 모델', 'outA OR (95% CI)', 'out2 OR (95% CI)'],
         'en': ['Model', 'outA OR (95% CI)', 'out2 OR (95% CI)'],
     },
-    'adj_interp': {
-        'ko': (
-            "해석\n\n"
-            "담석증(Cholelithiasis)은 당뇨병 발생의 독립적 위험인자\n"
-            "  - 완전 보정(Model 3): outA OR=1.23 (p<0.001), out2 OR=1.17 (p<0.001)\n"
-            "  - 보정 변수 추가에도 OR이 유지/증가 → 교란변수에 의한 결과가 아님\n\n"
-            "담낭절제술(Cholecystectomy)은 당뇨병 발생과 유의한 연관 없음\n"
-            "  - 모든 모델에서 OR ≈ 0.96-0.97, 모두 p > 0.05"
-        ),
-        'en': (
-            "Interpretation\n\n"
-            "Cholelithiasis is an independent risk factor for diabetes.\n"
-            "  - Fully adjusted (Model 3): outA OR=1.23, out2 OR=1.17 (both p<0.001)\n"
-            "  - OR maintained/increased after adjustment -> not confounding-driven\n\n"
-            "Cholecystectomy shows NO significant association with diabetes.\n"
-            "  - All models: OR ~ 0.96-0.97, all p > 0.05"
-        ),
-    },
+    # adj_interp: generated dynamically by _adj_interp_text(stats, lang)
 
     # ── Performance ──
     'sec_perf': {
@@ -327,20 +273,7 @@ T = {
     },
     'auroc_title': {'ko': 'AUROC 요약', 'en': 'AUROC Summary'},
     'auroc_headers': {'ko': ['모델', 'Test AUROC'], 'en': ['Model', 'Test AUROC']},
-    'perf_note': {
-        'ko': ('비고\n'
-               '- 초록색 행 = AUROC 최고 모델\n'
-               '- Bootstrap: n=50 resamples\n'
-               '- 임계값: Youden Index 기준\n'
-               '- 합성(더미) 데이터 기반 결과\n'
-               '  (파이프라인 검증 목적)'),
-        'en': ('Notes\n'
-               '- Green row = best AUROC model\n'
-               '- Bootstrap: n=50 resamples\n'
-               '- Threshold: Youden Index\n'
-               '- Synthetic (dummy) data results\n'
-               '  (pipeline validation only)'),
-    },
+    # perf_note: generated dynamically by _perf_note_text(stats, lang)
 
     # ── Figures ──
     'fig_roc': {'ko': '6. ROC Curve 비교', 'en': '6. ROC Curve Comparison'},
@@ -350,66 +283,7 @@ T = {
 
     # ── Findings ──
     'sec_findings': {'ko': '주요 발견 및 한계', 'en': 'Key Findings & Limitations'},
-    'findings': {
-        'ko': (
-            "주요 발견 (Key Findings)\n\n"
-            "1. 담석증(Cholelithiasis)은 당뇨병 발생의 독립적 위험인자\n"
-            "   - outA: 완전 보정(Model 3) OR = 1.23 (1.10-1.37), p<0.001\n"
-            "   - out2: 완전 보정(Model 3) OR = 1.17 (1.05-1.31), p<0.001\n"
-            "   - 보정 변수 추가 시에도 OR이 유지/증가\n\n"
-            "2. 담낭절제술(Cholecystectomy)은 유의한 연관성 없음\n"
-            "   - 모든 모델에서 OR ≈ 0.96-0.97 (p > 0.05)\n\n"
-            "3. 가장 강력한 위험인자 (Crude OR)\n"
-            "   - 공복혈당장애(IFG): OR ≈ 1.56-1.58\n"
-            "   - 대사증후군: OR ≈ 1.33-1.36\n\n"
-            "4. 머신러닝 모델 성능\n"
-            "   - AUROC 범위: 0.53-0.58 (합성 데이터 한계)\n"
-            "   - Logistic Regression이 동등하거나 최고 성능"
-        ),
-        'en': (
-            "Key Findings\n\n"
-            "1. Cholelithiasis is an independent risk factor for diabetes\n"
-            "   - outA: Model 3 OR = 1.23 (1.10-1.37), p<0.001\n"
-            "   - out2: Model 3 OR = 1.17 (1.05-1.31), p<0.001\n"
-            "   - OR maintained/increased after full adjustment\n\n"
-            "2. Cholecystectomy: no significant association\n"
-            "   - OR ~ 0.96-0.97 across all models (p > 0.05)\n\n"
-            "3. Strongest risk factors (Crude OR)\n"
-            "   - Impaired fasting glucose: OR ~ 1.56-1.58\n"
-            "   - Metabolic syndrome: OR ~ 1.33-1.36\n\n"
-            "4. ML model performance\n"
-            "   - AUROC range: 0.53-0.58 (modest; synthetic data)\n"
-            "   - LR comparable or best among all models"
-        ),
-    },
-    'limitations': {
-        'ko': (
-            "한계 및 참고사항\n\n"
-            "1. 현재 결과는 합성(더미) 데이터 기반\n"
-            "   - 파이프라인 검증 목적이며, 임상 해석은 실제 데이터 필요\n\n"
-            "2. 실제 NHIC 데이터 적용 시 예상 차이\n"
-            "   - 당뇨병 발생률 하락 (현재 31.4% → 실제 5-15% 예상)\n"
-            "   - 변수 간 실제 상관관계 반영 시 모델 성능 개선 기대\n"
-            "   - 결측치 패턴 상이 가능\n\n"
-            "3. 기술적 사항\n"
-            "   - Bootstrap: n=50 (논문 제출 시 n=1000 권장)\n"
-            "   - SHAP: TreeExplainer (트리모델) / KernelExplainer (ANN)\n"
-            "   - Random state: 1004 (전 단계)"
-        ),
-        'en': (
-            "Limitations & Notes\n\n"
-            "1. Results are based on synthetic (dummy) data\n"
-            "   - Pipeline validation only; real data needed for interpretation\n\n"
-            "2. Expected differences with real NHIC data\n"
-            "   - Lower incidence (31.4% -> ~5-15%)\n"
-            "   - Better model performance expected\n"
-            "   - Different missing patterns\n\n"
-            "3. Technical notes\n"
-            "   - Bootstrap: n=50 (use n=1000 for publication)\n"
-            "   - SHAP: TreeExplainer / KernelExplainer (ANN)\n"
-            "   - Random state: 1004 (all steps)"
-        ),
-    },
+    # findings & limitations: generated dynamically by _auto_findings / _auto_limitations
 
     # ── Footer ──
     'footer_page': {'ko': '{pg} 페이지', 'en': 'Page {pg}'},
@@ -527,10 +401,344 @@ def _load_fig(target, name):
 
 
 # ═══════════════════════════════════════════════════════════════════════
+# Dynamic data loading & text generation
+# ═══════════════════════════════════════════════════════════════════════
+
+def _load_stats(n_bootstrap=1000):
+    """Load dynamic statistics from processed data and results."""
+    stats = {'n_bootstrap': n_bootstrap}
+
+    for target in TARGETS:
+        processed_dir = os.path.join(SCRIPT_DIR, 'data', 'processed', target)
+        ts = {}
+        try:
+            y_train = np.load(os.path.join(processed_dir, 'y_train.npy'))
+            y_val = np.load(os.path.join(processed_dir, 'y_val.npy'))
+            y_test = np.load(os.path.join(processed_dir, 'y_test.npy'))
+            X_train = np.load(os.path.join(processed_dir, 'X_train.npy'))
+            with open(os.path.join(processed_dir, 'feature_names.txt')) as f:
+                feature_names = [l.strip() for l in f.readlines()]
+            y_all = np.concatenate([y_train, y_val, y_test])
+            ts['train_n'] = len(y_train)
+            ts['val_n'] = len(y_val)
+            ts['test_n'] = len(y_test)
+            ts['total_n'] = len(y_all)
+            ts['positive'] = int(y_all.sum())
+            ts['negative'] = ts['total_n'] - ts['positive']
+            ts['rate'] = ts['positive'] / ts['total_n'] if ts['total_n'] > 0 else 0
+            ts['n_features'] = X_train.shape[1]
+            ts['feature_names'] = feature_names
+        except Exception:
+            ts = {'train_n': 0, 'val_n': 0, 'test_n': 0, 'total_n': 0,
+                  'positive': 0, 'negative': 0, 'rate': 0,
+                  'n_features': 25, 'feature_names': []}
+
+        # Best model & AUROC range
+        best_auroc = 0; best_model = None; auroc_vals = []
+        for mdl in MODEL_ORDER:
+            m = _load_metrics(target, mdl)
+            if m and 'auroc' in m:
+                auroc_vals.append(m['auroc'])
+                if m['auroc'] > best_auroc:
+                    best_auroc = m['auroc']; best_model = mdl
+        ts['best_model'] = best_model
+        ts['best_auroc'] = best_auroc
+        ts['auroc_range'] = (min(auroc_vals), max(auroc_vals)) if auroc_vals else (0, 0)
+
+        # OR data
+        crude, adj = _load_or(target)
+        ts['crude_or'] = crude
+        ts['adjusted_or'] = adj
+
+        stats[target] = ts
+
+    # Overall stats from first target
+    first = TARGETS[0]
+    for k in ['total_n', 'train_n', 'val_n', 'test_n', 'n_features']:
+        stats[k] = stats[first].get(k, 0)
+    fnames = stats[first].get('feature_names', [])
+    missing_vars = [f.replace('_missing', '') for f in fnames if f.endswith('_missing')]
+    stats['n_missing_ind'] = len(missing_vars)
+    stats['n_original'] = stats['n_features'] - stats['n_missing_ind']
+    stats['missing_vars'] = missing_vars
+    return stats
+
+
+def _title_info(stats, lang):
+    """Generate title page info dynamically."""
+    total_n = '{:,}'.format(stats['total_n'])
+    date = datetime.now().strftime('%Y-%m-%d')
+    if lang == 'ko':
+        return (
+            '데이터: 국민건강보험공단 건강검진 코호트 (N={n})\n\n'
+            '연구 가설: 담석증 진단 여부 및 담낭절제술 시행 여부가\n'
+            '          당뇨병 발생에 영향을 미치는가?\n\n'
+            'Outcome: outA (당뇨병 전체)  /  out2 (2형 당뇨병)\n\n'
+            '모델: LR, Decision Tree, Random Forest,\n'
+            '       XGBoost, LightGBM, ANN (MLP)\n\n'
+            '분석일: {d}'
+        ).format(n=total_n, d=date)
+    else:
+        return (
+            'Data: NHIC Health Checkup Cohort (N={n})\n\n'
+            'Hypothesis: Whether cholelithiasis diagnosis and/or\n'
+            '       cholecystectomy affect diabetes incidence\n\n'
+            'Outcomes: outA (Any Diabetes) / out2 (Type 2 Diabetes)\n\n'
+            'Models: LR, Decision Tree, Random Forest,\n'
+            '       XGBoost, LightGBM, ANN (MLP)\n\n'
+            'Date: {d}'
+        ).format(n=total_n, d=date)
+
+
+def _data_rows(stats, lang):
+    """Generate data overview table rows dynamically."""
+    total = '{:,}'.format(stats['total_n'])
+    train = '{:,}'.format(stats['train_n'])
+    val = '{:,}'.format(stats['val_n'])
+    test = '{:,}'.format(stats['test_n'])
+    tn = stats['total_n'] or 1
+    train_pct = int(round(100.0 * stats['train_n'] / tn))
+    val_pct = int(round(100.0 * stats['val_n'] / tn))
+    test_pct = int(round(100.0 * stats['test_n'] / tn))
+    mi = stats['n_missing_ind']
+    feat_str = '{}'.format(stats['n_original'])
+    if mi > 0:
+        feat_str += ' + Missing indicator {}'.format(mi)
+    if lang == 'ko':
+        return [
+            ['전체 대상자', '{}명 (담석증 유/무 포함)'.format(total)],
+            ['훈련 세트 ({}%)'.format(train_pct), '{}명'.format(train)],
+            ['검증 세트 ({}%)'.format(val_pct), '{}명'.format(val)],
+            ['테스트 세트 ({}%)'.format(test_pct), '{}명'.format(test)],
+            ['입력 변수', '{}개'.format(feat_str)],
+        ]
+    else:
+        return [
+            ['Total Subjects', '{} (with & without cholelithiasis)'.format(total)],
+            ['Training Set ({}%)'.format(train_pct), train],
+            ['Validation Set ({}%)'.format(val_pct), val],
+            ['Test Set ({}%)'.format(test_pct), test],
+            ['Input Features', feat_str],
+        ]
+
+
+def _outcome_rows(stats, lang):
+    """Generate outcome distribution table rows dynamically."""
+    rows = []
+    for target in TARGETS:
+        ts = stats.get(target, {})
+        pos = '{:,}'.format(ts.get('positive', 0))
+        neg = '{:,}'.format(ts.get('negative', 0))
+        rate = '{:.1f}%'.format(ts.get('rate', 0) * 100)
+        if lang == 'ko':
+            label = 'outA (당뇨병)' if target == 'outA' else 'out2 (2형 당뇨병)'
+        else:
+            label = 'outA (Any Diabetes)' if target == 'outA' else 'out2 (Type 2 Diabetes)'
+        rows.append([label, pos, neg, rate])
+    return rows
+
+
+def _perf_note_text(stats, lang):
+    """Generate performance notes dynamically."""
+    nb = stats.get('n_bootstrap', 1000)
+    if lang == 'ko':
+        return (
+            '비고\n'
+            '- 초록색 행 = AUROC 최고 모델\n'
+            '- Bootstrap: n={} resamples\n'
+            '- 임계값: Youden Index 기준'
+        ).format(nb)
+    else:
+        return (
+            'Notes\n'
+            '- Green row = best AUROC model\n'
+            '- Bootstrap: n={} resamples\n'
+            '- Threshold: Youden Index'
+        ).format(nb)
+
+
+def _get_adj_or_p(adj_df, variable, model_prefix):
+    """Get OR value and p-value from adjusted OR table."""
+    if adj_df is None:
+        return 'N/A', 'N/A'
+    row = adj_df[adj_df['Variable'] == variable]
+    if len(row) == 0:
+        return 'N/A', 'N/A'
+    or_col = '{} OR (95% CI)'.format(model_prefix)
+    p_col = '{} p-value'.format(model_prefix)
+    or_val = str(row[or_col].values[0]) if or_col in row.columns else 'N/A'
+    p_val = str(row[p_col].values[0]) if p_col in row.columns else 'N/A'
+    return or_val, p_val
+
+
+def _is_significant(p_str):
+    """Check if p-value < 0.05."""
+    try:
+        return float(p_str) < 0.05
+    except (ValueError, TypeError):
+        if isinstance(p_str, str):
+            return '<0.001' in p_str or '<0.01' in p_str
+        return False
+
+
+def _adj_interp_text(stats, lang):
+    """Generate adjusted OR interpretation dynamically."""
+    m3 = 'Model 3 (+Clinical)'
+    chol_or_a, chol_p_a = _get_adj_or_p(
+        stats['outA'].get('adjusted_or'), 'Cholelithiasis', m3)
+    chol_or_2, chol_p_2 = _get_adj_or_p(
+        stats['out2'].get('adjusted_or'), 'Cholelithiasis', m3)
+    chole_or_a, chole_p_a = _get_adj_or_p(
+        stats['outA'].get('adjusted_or'), 'Cholecystectomy', m3)
+    chole_or_2, chole_p_2 = _get_adj_or_p(
+        stats['out2'].get('adjusted_or'), 'Cholecystectomy', m3)
+
+    chol_sig = _is_significant(chol_p_a) or _is_significant(chol_p_2)
+    chole_sig = _is_significant(chole_p_a) or _is_significant(chole_p_2)
+
+    if lang == 'ko':
+        text = "해석\n\n"
+        if chol_sig:
+            text += "담석증(Cholelithiasis)은 당뇨병 발생의 독립적 위험인자\n"
+        else:
+            text += "담석증(Cholelithiasis)은 완전 보정 후 유의한 연관 없음\n"
+        text += "  - Model 3: outA OR={}, out2 OR={}\n\n".format(
+            chol_or_a, chol_or_2)
+        if chole_sig:
+            text += "담낭절제술(Cholecystectomy)은 당뇨병 발생과 유의한 연관\n"
+        else:
+            text += "담낭절제술(Cholecystectomy)은 당뇨병 발생과 유의한 연관 없음\n"
+        text += "  - Model 3: outA OR={}, out2 OR={}".format(
+            chole_or_a, chole_or_2)
+    else:
+        text = "Interpretation\n\n"
+        if chol_sig:
+            text += "Cholelithiasis is an independent risk factor for diabetes.\n"
+        else:
+            text += "Cholelithiasis: no significant association after full adjustment.\n"
+        text += "  - Model 3: outA OR={}, out2 OR={}\n\n".format(
+            chol_or_a, chol_or_2)
+        if chole_sig:
+            text += "Cholecystectomy shows significant association with diabetes.\n"
+        else:
+            text += "Cholecystectomy shows NO significant association with diabetes.\n"
+        text += "  - Model 3: outA OR={}, out2 OR={}".format(
+            chole_or_a, chole_or_2)
+    return text
+
+
+def _auto_findings(stats, lang):
+    """Auto-generate findings text from actual results."""
+    m3 = 'Model 3 (+Clinical)'
+    chol_or_a, _ = _get_adj_or_p(
+        stats['outA'].get('adjusted_or'), 'Cholelithiasis', m3)
+    chol_or_2, _ = _get_adj_or_p(
+        stats['out2'].get('adjusted_or'), 'Cholelithiasis', m3)
+    chole_or_a, _ = _get_adj_or_p(
+        stats['outA'].get('adjusted_or'), 'Cholecystectomy', m3)
+    chole_or_2, _ = _get_adj_or_p(
+        stats['out2'].get('adjusted_or'), 'Cholecystectomy', m3)
+
+    # Top crude OR risk factors (excluding exposure vars)
+    top_factors = []
+    crude = stats['outA'].get('crude_or')
+    if crude is not None:
+        for _, row in crude.iterrows():
+            var = str(row['Variable'])
+            if var in ('Cholelithiasis', 'Cholecystectomy'):
+                continue
+            try:
+                or_str = str(row['Crude OR (95% CI)'])
+                or_val = float(or_str.split(' ')[0])
+                top_factors.append((var, or_val, or_str))
+            except (ValueError, IndexError):
+                pass
+        top_factors.sort(key=lambda x: abs(x[1] - 1.0), reverse=True)
+
+    ar_a = stats['outA'].get('auroc_range', (0, 0))
+    ar_2 = stats['out2'].get('auroc_range', (0, 0))
+    bm_a = MODEL_DISPLAY.get(stats['outA'].get('best_model', ''), '')
+    bm_2 = MODEL_DISPLAY.get(stats['out2'].get('best_model', ''), '')
+
+    if lang == 'ko':
+        text = "주요 발견 (Key Findings)\n\n"
+        text += "1. 담석증(Cholelithiasis) — 완전 보정 분석 결과\n"
+        text += "   - outA: Model 3 OR = {}\n".format(chol_or_a)
+        text += "   - out2: Model 3 OR = {}\n\n".format(chol_or_2)
+        text += "2. 담낭절제술(Cholecystectomy) — 완전 보정 분석 결과\n"
+        text += "   - outA: Model 3 OR = {}\n".format(chole_or_a)
+        text += "   - out2: Model 3 OR = {}\n\n".format(chole_or_2)
+        if top_factors:
+            text += "3. 주요 위험인자 (Crude OR 기준 상위)\n"
+            for var, _, or_str in top_factors[:3]:
+                text += "   - {}: {}\n".format(var, or_str)
+            text += "\n"
+        n = 4 if top_factors else 3
+        text += "{}. 머신러닝 모델 성능\n".format(n)
+        text += "   - outA AUROC: {:.3f}-{:.3f} (Best: {})\n".format(
+            ar_a[0], ar_a[1], bm_a)
+        text += "   - out2 AUROC: {:.3f}-{:.3f} (Best: {})".format(
+            ar_2[0], ar_2[1], bm_2)
+    else:
+        text = "Key Findings\n\n"
+        text += "1. Cholelithiasis — Fully adjusted analysis\n"
+        text += "   - outA: Model 3 OR = {}\n".format(chol_or_a)
+        text += "   - out2: Model 3 OR = {}\n\n".format(chol_or_2)
+        text += "2. Cholecystectomy — Fully adjusted analysis\n"
+        text += "   - outA: Model 3 OR = {}\n".format(chole_or_a)
+        text += "   - out2: Model 3 OR = {}\n\n".format(chole_or_2)
+        if top_factors:
+            text += "3. Top risk factors (by Crude OR)\n"
+            for var, _, or_str in top_factors[:3]:
+                text += "   - {}: {}\n".format(var, or_str)
+            text += "\n"
+        n = 4 if top_factors else 3
+        text += "{}. ML model performance\n".format(n)
+        text += "   - outA AUROC: {:.3f}-{:.3f} (Best: {})\n".format(
+            ar_a[0], ar_a[1], bm_a)
+        text += "   - out2 AUROC: {:.3f}-{:.3f} (Best: {})".format(
+            ar_2[0], ar_2[1], bm_2)
+    return text
+
+
+def _auto_limitations(stats, lang):
+    """Generate limitations text."""
+    nb = stats.get('n_bootstrap', 1000)
+    if lang == 'ko':
+        return (
+            "한계 및 참고사항\n\n"
+            "1. 후향적 코호트 연구 설계의 한계\n"
+            "   - 인과관계 확인 불가, 연관성 분석 결과\n\n"
+            "2. 기술적 사항\n"
+            "   - Bootstrap: n={nb} resamples\n"
+            "   - SHAP: TreeExplainer (트리모델) / KernelExplainer (ANN)\n"
+            "   - Random state: 1004 (전 단계 재현성 보장)\n"
+            "   - Youden Index 기준 최적 임계값 결정\n\n"
+            "3. Missing Data 처리\n"
+            "   - 결측률 5% 미만: 중앙값/최빈값 대체\n"
+            "   - 결측률 5% 이상: Missing Indicator 추가"
+        ).format(nb=nb)
+    else:
+        return (
+            "Limitations & Notes\n\n"
+            "1. Retrospective cohort study design\n"
+            "   - Cannot establish causality; association analysis only\n\n"
+            "2. Technical notes\n"
+            "   - Bootstrap: n={nb} resamples\n"
+            "   - SHAP: TreeExplainer / KernelExplainer (ANN)\n"
+            "   - Random state: 1004 (reproducibility)\n"
+            "   - Optimal threshold by Youden Index\n\n"
+            "3. Missing data handling\n"
+            "   - <5% missingness: median/mode imputation\n"
+            "   - >=5% missingness: Missing Indicator added"
+        ).format(nb=nb)
+
+
+# ═══════════════════════════════════════════════════════════════════════
 # Pages
 # ═══════════════════════════════════════════════════════════════════════
 
-def pg_title(pdf, pg, lang):
+def pg_title(pdf, pg, lang, stats):
     fig = _new()
     ff = _font(lang)
     fig.text(0.50, 0.62, t('title_main', lang),
@@ -542,14 +750,14 @@ def pg_title(pdf, pg, lang):
     lax = fig.add_axes([0.25, 0.41, 0.50, 0.002])
     lax.axhline(y=0, color=C_HEADER, linewidth=2); lax.axis('off')
     fig.text(0.50, 0.34,
-             t('title_info', lang, date=datetime.now().strftime('%Y-%m-%d')),
+             _title_info(stats, lang),
              ha='center', va='top', fontsize=11, color='#666666',
              linespacing=1.6, fontfamily=ff)
     _footer(fig, pg, lang)
     pdf.savefig(fig); plt.close(fig)
 
 
-def pg_overview(pdf, pg, lang):
+def pg_overview(pdf, pg, lang, stats):
     fig = _new(); ff = _font(lang)
     _title(fig, t('sec_overview', lang), lang)
 
@@ -561,13 +769,13 @@ def pg_overview(pdf, pg, lang):
     ax1 = fig.add_axes([0.05, 0.35, 0.42, 0.26])
     ax1.set_title(t('data_overview', lang), fontsize=12, fontweight='bold',
                   color=C_HEADER, loc='left', pad=6, fontfamily=ff)
-    _table(ax1, t('data_headers', lang), t('data_rows', lang),
+    _table(ax1, t('data_headers', lang), _data_rows(stats, lang),
            col_widths=[0.35, 0.65], fontsize=10, lang=lang)
 
     ax2 = fig.add_axes([0.55, 0.35, 0.42, 0.18])
     ax2.set_title(t('outcome_title', lang), fontsize=12, fontweight='bold',
                   color=C_HEADER, loc='left', pad=6, fontfamily=ff)
-    _table(ax2, t('outcome_headers', lang), t('outcome_rows', lang),
+    _table(ax2, t('outcome_headers', lang), _outcome_rows(stats, lang),
            col_widths=[0.35, 0.2, 0.2, 0.25], fontsize=10, lang=lang)
 
     fig.text(0.05, 0.29, t('methods_title', lang), fontsize=13,
@@ -645,7 +853,7 @@ def pg_crude_or(pdf, pg, lang):
     pdf.savefig(fig); plt.close(fig)
 
 
-def pg_adjusted_or(pdf, pg, lang):
+def pg_adjusted_or(pdf, pg, lang, stats):
     fig = _new(); ff = _font(lang)
     _title(fig, t('sec_adjusted', lang), lang)
     _subtitle(fig, t('adj_sub', lang), lang)
@@ -676,14 +884,9 @@ def pg_adjusted_or(pdf, pg, lang):
             chole_rows.append([lbl, _get(adj_a, 'Cholecystectomy', col),
                                _get(adj_2, 'Cholecystectomy', col)])
     else:
-        chol_rows = [['Crude', '1.18 (1.07-1.29)', '1.14 (1.03-1.25)'],
-                     ['Model 1', '1.17 (1.07-1.29)', '1.13 (1.03-1.25)'],
-                     ['Model 2', '1.18 (1.08-1.30)', '1.14 (1.03-1.25)'],
-                     ['Model 3', '1.23 (1.10-1.37)', '1.17 (1.05-1.31)']]
-        chole_rows = [['Crude', '0.97 (0.89-1.06)', '0.96 (0.88-1.05)'],
-                      ['Model 1', '0.97 (0.89-1.06)', '0.96 (0.87-1.05)'],
-                      ['Model 2', '0.96 (0.88-1.05)', '0.97 (0.88-1.06)'],
-                      ['Model 3', '0.96 (0.87-1.06)', '0.97 (0.87-1.07)']]
+        fig.text(0.5, 0.45, 'Adjusted OR data not available',
+                 ha='center', fontsize=14, color='red', fontfamily=ff)
+        _footer(fig, pg, lang); pdf.savefig(fig); plt.close(fig); return
 
     ax1 = fig.add_axes([0.04, 0.35, 0.44, 0.28])
     ax1.set_title(t('adj_chol_title', lang), fontsize=12, fontweight='bold',
@@ -698,7 +901,7 @@ def pg_adjusted_or(pdf, pg, lang):
     _table(ax2, t('adj_headers', lang), chole_rows,
            col_widths=[0.38, 0.31, 0.31], fontsize=10, lang=lang)
 
-    fig.text(0.07, 0.28, t('adj_interp', lang), fontsize=10, va='top',
+    fig.text(0.07, 0.28, _adj_interp_text(stats, lang), fontsize=10, va='top',
              linespacing=1.5, fontfamily=ff,
              bbox=dict(boxstyle='round,pad=0.6', facecolor=C_WARN,
                        edgecolor='#FFC107', alpha=0.8))
@@ -707,7 +910,7 @@ def pg_adjusted_or(pdf, pg, lang):
     pdf.savefig(fig); plt.close(fig)
 
 
-def pg_performance(pdf, pg, target, lang):
+def pg_performance(pdf, pg, target, lang, stats):
     fig = _new(); ff = _font(lang)
     _title(fig, t('sec_perf', lang, target=target), lang)
     _subtitle(fig, t('target_label', lang)[target], lang)
@@ -770,7 +973,7 @@ def pg_performance(pdf, pg, target, lang):
         _table(ax2, t('auroc_headers', lang), cv_rows,
                col_widths=[0.62, 0.38], fontsize=10, lang=lang)
 
-    fig.text(0.52, 0.31, t('perf_note', lang), fontsize=10, va='top',
+    fig.text(0.52, 0.31, _perf_note_text(stats, lang), fontsize=10, va='top',
              color='#555555', fontfamily=ff,
              bbox=dict(boxstyle='round,pad=0.5', facecolor=C_HEADER_LT,
                        edgecolor=C_HEADER, alpha=0.3))
@@ -837,16 +1040,16 @@ def pg_two_figures(pdf, pg, target, fn1, fn2, t1, t2, title_key, lang):
     pdf.savefig(fig); plt.close(fig)
 
 
-def pg_findings(pdf, pg, lang):
+def pg_findings(pdf, pg, lang, stats):
     fig = _new(); ff = _font(lang)
     _title(fig, t('sec_findings', lang), lang)
 
-    fig.text(0.07, 0.85, t('findings', lang), fontsize=11, va='top',
+    fig.text(0.07, 0.85, _auto_findings(stats, lang), fontsize=11, va='top',
              linespacing=1.5, fontfamily=ff,
              bbox=dict(boxstyle='round,pad=0.7', facecolor=C_BEST,
                        edgecolor='#4CAF50', alpha=0.5))
 
-    fig.text(0.07, 0.37, t('limitations', lang), fontsize=11, va='top',
+    fig.text(0.07, 0.37, _auto_limitations(stats, lang), fontsize=11, va='top',
              linespacing=1.5, fontfamily=ff,
              bbox=dict(boxstyle='round,pad=0.7', facecolor='#FFF3E0',
                        edgecolor='#FF9800', alpha=0.5))
@@ -859,7 +1062,7 @@ def pg_findings(pdf, pg, lang):
 # Main
 # ═══════════════════════════════════════════════════════════════════════
 
-def _generate_one(output_path, lang):
+def _generate_one(output_path, lang, stats):
     """Generate a single PDF for the given language."""
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     label = {'ko': '한글', 'en': 'English'}[lang]
@@ -869,13 +1072,13 @@ def _generate_one(output_path, lang):
 
     with PdfPages(output_path) as pdf:
         pg = 1
-        pg_title(pdf, pg, lang); pg += 1
-        pg_overview(pdf, pg, lang); pg += 1
+        pg_title(pdf, pg, lang, stats); pg += 1
+        pg_overview(pdf, pg, lang, stats); pg += 1
         pg_variables(pdf, pg, lang); pg += 1
         pg_crude_or(pdf, pg, lang); pg += 1
-        pg_adjusted_or(pdf, pg, lang); pg += 1
+        pg_adjusted_or(pdf, pg, lang, stats); pg += 1
         for tgt in TARGETS:
-            pg_performance(pdf, pg, tgt, lang); pg += 1
+            pg_performance(pdf, pg, tgt, lang, stats); pg += 1
         for tgt in TARGETS:
             pg_figure(pdf, pg, tgt, 'comparison_roc', 'fig_roc', lang)
             pg += 1
@@ -888,24 +1091,25 @@ def _generate_one(output_path, lang):
         for tgt in TARGETS:
             pg_figure(pdf, pg, tgt, 'comparison_shap', 'fig_shap', lang)
             pg += 1
-        pg_findings(pdf, pg, lang)
+        pg_findings(pdf, pg, lang, stats)
 
     print("    {} pages -> {}".format(pg, output_path))
     return pg
 
 
-def create_pdf_report():
+def create_pdf_report(n_bootstrap=1000):
     """Generate both Korean and English PDF reports."""
     print("=" * 60)
     print("  PDF 분석 보고서 생성 (한글 + English)")
     print("=" * 60)
 
+    stats = _load_stats(n_bootstrap=n_bootstrap)
     os.makedirs(EXPORT_DIR, exist_ok=True)
 
     for lang, fname in [('ko', 'analysis_report_ko.pdf'),
                         ('en', 'analysis_report_en.pdf')]:
         out = os.path.join(RESULTS_DIR, fname)
-        _generate_one(out, lang)
+        _generate_one(out, lang, stats)
         exp = os.path.join(EXPORT_DIR, fname)
         shutil.copy2(out, exp)
         print("    -> export: {}".format(exp))
